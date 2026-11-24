@@ -1,0 +1,39 @@
+name: demo-diversions
+on:
+  push:
+    branches: [demo-dpkg-diversions]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  demo:
+    strategy:
+      fail-fast: false
+      matrix:
+        script: [upstream, patched]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Diversions before
+        run: |
+          dpkg-divert --list /usr/bin/pg_config
+          sudo cp /var/lib/dpkg/diversions /tmp/diversions-before
+          dpkg -s libpq-dev | grep -E '^(Status|Version)'
+      - name: Get install.sh
+        run: |
+          if [ "${{ matrix.script }}" = upstream ]; then
+            curl -fsSL https://raw.githubusercontent.com/shivammathur/php-ubuntu/main/scripts/install.sh -o /tmp/install.sh
+          else
+            curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/scripts/install.sh -o /tmp/install.sh
+          fi
+      - name: Install PHP 8.5 from the cache
+        run: bash /tmp/install.sh 8.5 release nts
+      - name: Diversions after
+        run: |
+          php -v
+          dpkg-divert --list /usr/bin/pg_config
+          diff /tmp/diversions-before /var/lib/dpkg/diversions && echo "diversions unchanged"
+      - name: Reinstall libpq-dev
+        run: |
+          sudo apt-get update -o Dir::Etc::sourcelist=/dev/null -o Dir::Etc::sourceparts=/etc/apt/sources.list.d
+          sudo apt-get install -y --reinstall libpq-dev
+          sudo dpkg --audit
