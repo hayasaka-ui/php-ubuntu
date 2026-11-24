@@ -34,6 +34,6 @@ jobs:
           diff /tmp/diversions-before /var/lib/dpkg/diversions && echo "diversions unchanged" || echo "::warning::diversions changed"
       - name: Reinstall libpq-dev
         run: |
-          sudo apt-get update -o Dir::Etc::sourcelist=/dev/null -o Dir::Etc::sourceparts=/etc/apt/sources.list.d
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get install -y --reinstall libpq-dev
           sudo dpkg --audit
