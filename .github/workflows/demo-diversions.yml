@@ -31,7 +31,7 @@ jobs:
         run: |
           php -v
           dpkg-divert --list /usr/bin/pg_config
-          diff /tmp/diversions-before /var/lib/dpkg/diversions && echo "diversions unchanged"
+          diff /tmp/diversions-before /var/lib/dpkg/diversions && echo "diversions unchanged" || echo "::warning::diversions changed"
       - name: Reinstall libpq-dev
         run: |
           sudo apt-get update -o Dir::Etc::sourcelist=/dev/null -o Dir::Etc::sourceparts=/etc/apt/sources.list.d
